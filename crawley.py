@@ -1,0 +1,92 @@
+import sys
+import time
+from urllib.parse import urlparse
+
+from deduplicator import Deduplicator
+from extractor import Extractor
+from fetcher import Fetcher
+from frontier import Frontier
+
+
+class DualWriter:
+    def __init__(self, file_path):
+        self.file = open(file_path, "a")
+        self.stdout = sys.stdout
+
+    def write(self, text):
+        self.file.write(text)
+        self.file.flush()
+        self.stdout.write(text)
+        self.stdout.flush()
+
+    def close(self):
+        self.file.close()
+
+
+class Crawley:
+    def __init__(self, start_url, user_agent="CrawleyBot/1.0", allowed_domain=None):
+        parsed = urlparse(start_url)
+        if allowed_domain is None:
+            allowed_domain = parsed.netloc
+
+        self.deduplicator = Deduplicator()
+        self.fetcher = Fetcher(user_agent)
+        self.frontier = Frontier(start_url, user_agent, self.deduplicator)
+        self.extractor = Extractor(allowed_domain, self.deduplicator)
+        self.user_agent = user_agent
+        self.start_url = start_url
+
+    def crawl(self, output_file=None):
+        if output_file:
+            f = DualWriter(output_file)
+        else:
+            f = sys.stdout
+
+        try:
+            start_time = time.time()
+            f.write(f"Starting crawl from: {self.start_url}\n")
+            f.write(f"Domain: {self.frontier.base_netloc}\n\n")
+
+            while self.frontier.has_next():
+                url = self.frontier.get_next()
+
+                if self.frontier.is_visited(url):
+                    continue
+
+                normalized_url = self.deduplicator.normalize(url)
+
+                if not self.frontier.is_allowed(normalized_url):
+                    f.write(f"Skipping (robots.txt): {normalized_url}\n")
+                    self.frontier.mark_visited(normalized_url)
+                    continue
+
+                normalized_url = self.frontier.mark_visited(normalized_url)
+                f.write(f"Visited: {normalized_url}\n")
+
+                success, html, status_code, final_url = self.fetcher.fetch(normalized_url)
+
+                if not success:
+                    f.write(f"Failed to fetch: {normalized_url}\n")
+                    if status_code:
+                        f.write(f"  Status code: {status_code}\n")
+                    self.frontier.mark_visited(normalized_url)
+                    continue
+
+                if final_url != normalized_url:
+                    final_normalized = self.deduplicator.normalize(final_url)
+                    if self.frontier.is_visited(final_normalized):
+                        continue
+                    normalized_url = self.frontier.mark_visited(final_normalized)
+                    f.write(f"Visited: {normalized_url}\n")
+
+                links = self.extractor.extract(html, normalized_url)
+                added = self.frontier.add_urls(links)
+
+            elapsed_time = time.time() - start_time
+            f.write(
+                f"\nCrawl complete. Visited {self.frontier.get_visited_count()} pages in {elapsed_time:.2f} seconds.\n"
+            )
+        finally:
+            if output_file:
+                f.close()
+

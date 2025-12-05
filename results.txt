@@ -42013,4 +42013,4 @@ Visited: https://crawlme.monzo.com/products/ef16da5f-1ac8-43bf-bfb3-72cd9753633c
 Visited: https://crawlme.monzo.com/products/f650c991-1535-4330-872d-513fdfc9e5b4.html
 Visited: https://crawlme.monzo.com/products/f8434076-e083-4372-ae23-40cd026a6cee.html
 
-Crawl complete. Visited 42011 pages in 426.59 seconds.
+Crawl complete. Visited 42011 pages in 471.18 seconds.
