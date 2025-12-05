@@ -1,5 +1,6 @@
 import argparse
 import sys
+import time
 from collections import deque
 from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
@@ -50,9 +51,10 @@ class Deduplicator:
         unique = []
         for url in urls:
             normalized = self.normalize(url)
-            if normalized not in seen_in_list:
+            if normalized not in self.seen and normalized not in seen_in_list:
                 seen_in_list.add(normalized)
                 unique.append(normalized)
+                self.seen.add(normalized)
         return unique
 
     def get_seen_count(self):
@@ -134,14 +136,9 @@ class Frontier:
         unique_urls = self.deduplicator.filter_unique(urls)
         added = []
         for url in unique_urls:
-            if (
-                url not in self.visited
-                and url not in self.queued
-                and url not in self.deduplicator.seen
-            ):
+            if url not in self.visited and url not in self.queued:
                 self.to_visit.append(url)
                 self.queued.add(url)
-                self.deduplicator.seen.add(url)
                 added.append(url)
         return added
 
@@ -195,6 +192,7 @@ class Crawley:
             f = sys.stdout
 
         try:
+            start_time = time.time()
             f.write(f"Starting crawl from: {self.start_url}\n")
             f.write(f"Domain: {self.frontier.base_netloc}\n\n")
 
@@ -212,6 +210,7 @@ class Crawley:
                     continue
 
                 normalized_url = self.frontier.mark_visited(normalized_url)
+                f.write(f"Visited: {normalized_url}\n")
 
                 success, html, status_code, final_url = self.fetcher.fetch(normalized_url)
 
@@ -227,23 +226,15 @@ class Crawley:
                     if self.frontier.is_visited(final_normalized):
                         continue
                     normalized_url = self.frontier.mark_visited(final_normalized)
+                    f.write(f"Visited: {normalized_url}\n")
 
                 links = self.extractor.extract(html, normalized_url)
-
                 added = self.frontier.add_urls(links)
-                if added:
-                    f.write(f"ADDED: {len(added)}\n")
 
-                # for link in added:
-                #     f.write(f"  add  - {link}\n")
-                # f.write(f"Visited: {normalized_url}\n")
-                # f.write(f"  Status: {status_code}\n")
-                # f.write(f"  Links found ({len(links)}):\n")
-                # for link in links:
-                #     f.write(f"    - {link}\n")
-                # f.write("\n")
-
-            f.write(f"\nCrawl complete. Visited {self.frontier.get_visited_count()} pages.\n")
+            elapsed_time = time.time() - start_time
+            f.write(
+                f"\nCrawl complete. Visited {self.frontier.get_visited_count()} pages in {elapsed_time:.2f} seconds.\n"
+            )
         finally:
             if output_file:
                 f.close()
