@@ -2,11 +2,12 @@
 
 This directory contains unit and integration tests for the Crawley web crawler.
 
-## Test Structure
+## Tests
 
-- `test_architecture.py` - Tests for service architecture and component integration
-- `test_deduplication.py` - Tests for URL deduplication logic
-- `test_redis_storage.py` - Tests for Redis storage integration
+- `test_basic.py` - service architecture and components integration
+- `test_dedup.py` - URL deduplication logic
+- `test_crawling_level.py` - checking the basic crawling logic of limiting crawling depth
+- `test_storage.py` - storage (redis) integration
 
 ## Running Tests
 

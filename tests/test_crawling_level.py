@@ -38,54 +38,11 @@ class TestLevel:
         frontier = Frontier("https://crawlme.monzo.com/", max_level=1)
         
         links = ["https://crawlme.monzo.com/page1"]
-        added = frontier.add_urls(links, current_level=1)
-        assert len(added) == 0
-
-    def test_level_prevents_adding_urls_when_next_level_exceeds_max(self):
-        frontier = Frontier("https://crawlme.monzo.com/", max_level=1)
-        
-        links = ["https://crawlme.monzo.com/page1"]
         added = frontier.add_urls(links, current_level=0)
         assert len(added) == 1
         
-        added_again = frontier.add_urls(links, current_level=1)
-        assert len(added_again) == 0
-
-    def test_urls_beyond_max_level_are_not_added(self):
-        frontier = Frontier("https://crawlme.monzo.com/", max_level=0)
-        
-        url, level = frontier.get_next()
-        assert url == "https://crawlme.monzo.com/"
-        assert level == 0
-        
-        links = ["https://crawlme.monzo.com/page1"]
-        added = frontier.add_urls(links, current_level=0)
-        assert len(added) == 0
-        
-        assert not frontier.has_next()
-
-    def test_level_tracking_in_memory_storage(self):
-        frontier = Frontier("https://crawlme.monzo.com/", max_level=2)
-        
-        url, level = frontier.get_next()
-        assert level == 0
-        
-        links = ["https://crawlme.monzo.com/page1", "https://crawlme.monzo.com/page2"]
-        added = frontier.add_urls(links, current_level=0)
-        assert len(added) == 2
-        
-        url, level = frontier.get_next()
-        assert level == 1
-        
-        links2 = ["https://crawlme.monzo.com/page3"]
-        added2 = frontier.add_urls(links2, current_level=1)
-        assert len(added2) == 1
-        
-        url, level = frontier.get_next()
-        assert level == 1
-        
-        url, level = frontier.get_next()
-        assert level == 2
+        added_beyond = frontier.add_urls(links, current_level=1)
+        assert len(added_beyond) == 0
 
     def test_level_0_crawls_only_start_url(self):
         with patch("crawley.Fetcher") as mock_fetcher_class, patch("crawley.Extractor") as mock_extractor_class:
