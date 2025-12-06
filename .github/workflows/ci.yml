@@ -45,15 +45,47 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run tests
+    - name: List test files
+      run: |
+        echo "Test files in tests/ directory:"
+        find tests -name "test_*.py" -type f
+        echo ""
+        echo "Expected test files:"
+        echo "  - tests/test_basic.py (architecture tests)"
+        echo "  - tests/test_crawling_level.py (level limiting tests)"
+        echo "  - tests/test_dedup.py (deduplication tests)"
+        echo "  - tests/test_storage.py (Redis integration tests)"
+
+    - name: Run all unit and integration tests
       env:
         REDIS_HOST: localhost
         REDIS_PORT: 6379
       run: |
-        pytest tests/ -v
+        echo "=========================================="
+        echo "Running all tests from tests/ directory"
+        echo "=========================================="
+        pytest tests/ -v --tb=short
+        echo ""
+        echo "=========================================="
+        echo "Test execution completed"
+        echo "=========================================="
 
-    - name: Check for linting errors
+    - name: Verify all tests were discovered
+      run: |
+        echo "Verifying test discovery..."
+        TEST_COUNT=$(pytest tests/ --co -q 2>/dev/null | grep -E "test_" | wc -l)
+        echo "Discovered $TEST_COUNT test functions"
+        if [ "$TEST_COUNT" -lt 15 ]; then
+          echo "ERROR: Expected at least 15 tests, found $TEST_COUNT"
+          echo "Test discovery output:"
+          pytest tests/ --co -q
+          exit 1
+        fi
+        echo "✓ All tests discovered successfully"
+
+    - name: Check for syntax errors
       run: |
         python -m py_compile crawler.py crawley.py deduplicator.py extractor.py fetcher.py frontier.py storage.py
         python -m py_compile tests/*.py
+        echo "All Python files compile successfully"
 
