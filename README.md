@@ -177,6 +177,18 @@ SMEMBERS crawley:visited | head -10
 LRANGE crawley:queue 0 9
 ```
 
+## CI/CD
+
+This project uses GitHub Actions for continuous integration. The CI workflow:
+
+- Runs on push and pull requests to `main`, `master`, and `develop` branches
+- Tests against Python 3.11, 3.12, and 3.13
+- Sets up Redis service for integration tests
+- Runs all tests with pytest
+- Checks for Python syntax errors
+
+See `.github/workflows/ci.yml` for details.
+
 ## Implementation Details
 
 - Uses `requests` for HTTP requests
