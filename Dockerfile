@@ -15,7 +15,7 @@ RUN npm install && npm run build
 
 COPY *.py ./
 COPY static/css ./static/css
-COPY static/dist ./static/dist
+COPY static/index.html ./static/index.html
 
 EXPOSE 5000
 
