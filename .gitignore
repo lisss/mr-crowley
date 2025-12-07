@@ -9,4 +9,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-
+node_modules/
+static/dist/
+*.log
+.DS_Store

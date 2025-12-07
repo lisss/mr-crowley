@@ -27,6 +27,22 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Web UI (Recommended)
+
+Start the web interface for an easy-to-use GUI:
+
+```bash
+python web.py
+```
+
+Then open http://localhost:5002 in your browser. The web UI allows you to:
+- Enter crawl parameters (URL, level, user-agent, etc.)
+- Start crawls with a click
+- View real-time crawl logs
+- Access Redis data
+
+### Command Line
+
 ```bash
 python crawler.py <starting_url>
 ```
@@ -73,24 +89,21 @@ The project includes Docker support with separate services for Redis and the cra
 ### Running with Docker Compose
 
 ```bash
-# Build/rebuild the Docker image (required after code changes)
+# Build the Docker image (first time or after dependency changes)
 docker-compose build
 
-# Start all services (Redis, crawler, and Redis UI)
+# Start all services (Redis, crawler web UI, and Redis UI)
 docker-compose up -d
+
+# Access the Web UI at http://localhost:5002
+# Use the web interface to run crawls with all options!
 
 # Access Redis Web UI at http://localhost:8081
 # Browse all crawl data in your browser!
-
-# Run the crawler manually
-docker exec -it crawley-crawler python crawler.py https://crawlme.monzo.com/ --use-storage
-
-# Or with custom options (e.g., limit crawl depth to 2 levels for quick testing)
-docker exec -it crawley-crawler python crawler.py https://crawlme.monzo.com/ --use-storage --level 2
-
-# Or with multiple custom options
-docker exec -it crawley-crawler python crawler.py https://crawlme.monzo.com/ --use-storage --user-agent "MyBot/1.0" --level 3
 ```
+
+**Hot Reload Development:**
+The web UI supports hot reload when running in Docker. Code changes to `web.py` and other Python files will automatically reload without rebuilding the container. Just edit the files and save - Flask will detect changes and restart the server automatically.
 
 ### Running Individual Services
 
@@ -177,6 +190,17 @@ SMEMBERS crawley:visited | head -10
 # Get sample queued URLs
 LRANGE crawley:queue 0 9
 ```
+
+## Deployment
+
+Crawley can be deployed to free hosting platforms. See [DEPLOY.md](DEPLOY.md) for detailed deployment instructions.
+
+**Quick Deploy Options:**
+- **Railway** (Recommended) - Free tier with $5 credit/month
+- **Render** - Free tier available
+- **Fly.io** - Generous free tier
+
+All platforms support Docker deployment and can run the crawler with Redis storage.
 
 ## CI/CD
 

@@ -1,8 +1,4 @@
-# Crawley Test Suite
-
-This directory contains unit and integration tests for the Crawley web crawler.
-
-## Tests
+# Tests
 
 - `test_basic.py` - service architecture and components integration
 - `test_dedup.py` - URL deduplication logic
