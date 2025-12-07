@@ -20,5 +20,5 @@ COPY static/index.html ./static/index.html
 EXPOSE 5000
 
 ENTRYPOINT []
-CMD ["python", "web.py"]
+CMD sh -c "gunicorn --bind 0.0.0.0:\${PORT:-5000} --workers 2 --threads 2 --timeout 120 web:app"
 

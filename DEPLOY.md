@@ -44,7 +44,7 @@ Railway offers a free tier with $5 credit per month, perfect for testing deploym
 
 ### Accessing the Web UI
 
-Once deployed, Railway will provide a public URL (e.g., `https://your-app.railway.app`). Simply open this URL in your browser to access the web interface where you can:
+Once deployed, Railway will provide a public URL `https://mr-crowley-production.up.railway.app/`. Simply open this URL in your browser to access the web interface where you can:
 
 - Enter crawl parameters (URL, level, user-agent, etc.)
 - Start crawls with a click

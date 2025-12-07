@@ -193,12 +193,8 @@ LRANGE crawley:queue 0 9
 
 ## Deployment
 
-Crawley can be deployed to free hosting platforms. See [DEPLOY.md](DEPLOY.md) for detailed deployment instructions.
+Crawley can be deployed to Railway. See [DEPLOY.md](DEPLOY.md) for detailed deployment instructions.
 
-**Quick Deploy Options:**
-- **Railway** (Recommended) - Free tier with $5 credit/month
-- **Render** - Free tier available
-- **Fly.io** - Generous free tier
 
 All platforms support Docker deployment and can run the crawler with Redis storage.
 
