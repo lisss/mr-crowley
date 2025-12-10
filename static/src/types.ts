@@ -16,6 +16,7 @@ export interface CrawlFormData {
     allowed_domain?: string;
     level?: number;
     use_storage?: boolean;
+    clear_storage?: boolean;
 }
 
 export interface LogsResponse {

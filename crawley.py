@@ -18,6 +18,7 @@ class Crawley:
         allowed_domain=None,
         use_storage=False,
         max_level=None,
+        clear_storage=False,
     ):
         parsed = urlparse(start_url)
         if allowed_domain is None:
@@ -28,6 +29,17 @@ class Crawley:
             try:
                 self.storage = Storage()
                 self.storage.client.ping()
+                if clear_storage:
+                    keys = [
+                        "crawley:visited",
+                        "crawley:queued",
+                        "crawley:queue",
+                        "crawley:level",
+                        "crawley:seen",
+                    ]
+                    for key in keys:
+                        self.storage.client.delete(key)
+                    print("Cleared Redis storage.", file=sys.stdout)
             except Exception as e:
                 print(
                     f"Warning: Could not connect to Redis: {e}. Using in-memory storage.",

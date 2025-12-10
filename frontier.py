@@ -31,11 +31,10 @@ class Frontier:
         if self.storage:
             queue_length = self.storage.get_list_length(self.queue_key)
             if queue_length == 0:
-                if not self.storage.is_in_set(self.visited_key, normalized_start):
-                    if not self.storage.is_in_set(self.queued_key, normalized_start):
-                        self.storage.add_to_list(self.queue_key, normalized_start)
-                        self.storage.add_to_set(self.queued_key, normalized_start)
-                        self.storage.client.hset(self.level_key, normalized_start, 0)
+                if not self.storage.is_in_set(self.queued_key, normalized_start):
+                    self.storage.add_to_list(self.queue_key, normalized_start)
+                    self.storage.add_to_set(self.queued_key, normalized_start)
+                    self.storage.client.hset(self.level_key, normalized_start, 0)
             self._in_memory_to_visit = None
             self._in_memory_queued = None
             self._in_memory_visited = None

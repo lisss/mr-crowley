@@ -33,6 +33,11 @@ def main():
         default=None,
         help="Maximum crawl depth level (0 = start URL only, 1 = start URL + direct links, etc.)",
     )
+    parser.add_argument(
+        "--clear-storage",
+        action="store_true",
+        help="Clear Redis storage before starting crawl",
+    )
 
     args = parser.parse_args()
 
@@ -51,6 +56,7 @@ def main():
         args.allowed_domain,
         use_storage=args.use_storage,
         max_level=args.level,
+        clear_storage=args.clear_storage,
     )
     crawler.crawl()
 

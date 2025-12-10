@@ -48,6 +48,9 @@ def start_crawl():
                 use_storage = True
             if use_storage:
                 cmd.append("--use-storage")
+                clear_storage = data.get("clear_storage", True)
+                if clear_storage:
+                    cmd.append("--clear-storage")
 
             with crawl_lock:
                 crawl_logs.append(f"Executing: {' '.join(cmd)}\n")
@@ -153,4 +156,3 @@ def stop_crawl():
     crawl_process = None
 
     return jsonify({"message": "Crawl stopped"})
-

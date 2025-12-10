@@ -14,6 +14,7 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
     const [allowedDomain, setAllowedDomain] = useState('');
     const [level, setLevel] = useState('');
     const [useStorage, setUseStorage] = useState(false);
+    const [clearStorage, setClearStorage] = useState(true);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -34,6 +35,9 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
         }
         if (useStorage) {
             formData.use_storage = true;
+            if (clearStorage) {
+                formData.clear_storage = true;
+            }
         }
 
         onSubmit(formData);
@@ -93,12 +97,31 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
                         type="checkbox"
                         id="use_storage"
                         checked={useStorage}
-                        onChange={(e) => setUseStorage(e.target.checked)}
+                        onChange={(e) => {
+                            setUseStorage(e.target.checked);
+                            if (!e.target.checked) {
+                                setClearStorage(false);
+                            }
+                        }}
                         disabled={isRunning}
                     />
                     <label htmlFor="use_storage">Use Redis Storage</label>
                 </div>
             </div>
+            {useStorage && (
+                <div className="form-group">
+                    <div className="checkbox-group">
+                        <input
+                            type="checkbox"
+                            id="clear_storage"
+                            checked={clearStorage}
+                            onChange={(e) => setClearStorage(e.target.checked)}
+                            disabled={isRunning}
+                        />
+                        <label htmlFor="clear_storage">Clear Redis Storage Before Crawl</label>
+                    </div>
+                </div>
+            )}
             <div className="button-group">
                 <button type="submit" className="btn" disabled={isRunning}>
                     Start Crawl
