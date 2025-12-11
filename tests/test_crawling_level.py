@@ -45,7 +45,7 @@ class TestLevel:
         assert len(added_beyond) == 0
 
     def test_level_0_crawls_only_start_url(self):
-        with patch("crawley.Fetcher") as mock_fetcher_class, patch("crawley.Extractor") as mock_extractor_class:
+        with patch("crawler.init.Fetcher") as mock_fetcher_class, patch("crawler.init.Extractor") as mock_extractor_class:
             mock_fetcher = Mock()
             mock_fetcher.fetch.return_value = (True, "<html><body><a href='/page1'>Link</a></body></html>", 200, "https://crawlme.monzo.com/")
             mock_fetcher_class.return_value = mock_fetcher
@@ -70,4 +70,3 @@ class TestLevel:
             assert "Visited (level 0)" in output
             assert output.count("Visited (level 0)") == 1
             assert "Visited (level 1)" not in output
-
