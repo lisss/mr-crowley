@@ -14,10 +14,10 @@ COPY package.json package-lock.json ./
 COPY tsconfig.json ./
 COPY scripts ./scripts
 COPY static/src ./static/src
+COPY static/css ./static/css
 RUN npm install && npm run build
 
 COPY *.py ./
-COPY static/css ./static/css
 COPY static/index.html ./static/index.html
 
 EXPOSE 5000

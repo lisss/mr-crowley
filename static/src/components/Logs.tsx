@@ -25,7 +25,7 @@ export default function Logs({ logs }: LogsProps) {
 
     return (
         <div className="card">
-            <h2 style={{ marginBottom: '15px' }}>Crawl Logs</h2>
+            <h2 className="logs-header">Crawl Logs</h2>
             <div className="logs" ref={logsContainerRef}>
                 {logs}
                 <div ref={logsEndRef} />
