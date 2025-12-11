@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const distDir = path.join(__dirname, '../static/dist');
+const distDir = path.join(process.cwd(), 'static/dist');
 
 const sections = {
     utils: [
@@ -30,6 +30,8 @@ const sections = {
         path.join(distDir, 'components/Metrics/MetricsWarnings.js'),
         path.join(distDir, 'components/Metrics/MetricsQueue.js'),
         path.join(distDir, 'components/Metrics/Metrics.js'),
+    ],
+    app: [
         path.join(distDir, 'components/App.js'),
     ],
 };
@@ -51,6 +53,7 @@ const readFiles = (files) => files
 const utilsCode = readFiles(sections.utils);
 const hooksCode = readFiles(sections.hooks);
 const componentsCode = readFiles(sections.components);
+const appCode = readFiles(sections.app);
 
 const bundle = `const React = window.React;
 const ReactDOM = window.ReactDOM;
@@ -58,6 +61,7 @@ const { useState, useEffect, useCallback, useRef, useMemo, useReducer, useContex
 ${utilsCode}
 ${hooksCode}
 ${componentsCode}
+${appCode}
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         const rootEl = document.getElementById('root');
@@ -73,5 +77,8 @@ if (document.readyState === 'loading') {
     }
 }`;
 
+if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir, { recursive: true });
+}
 fs.writeFileSync(path.join(distDir, 'bundle.js'), bundle);
-console.log('Bundle created successfully');
+console.log('Bundle created successfully at', path.join(distDir, 'bundle.js'));

@@ -11,5 +11,9 @@ dist/
 build/
 node_modules/
 static/dist/
+static/dist/**/*
+scripts/bundle.js
+*.bundle.js
+bundle.js
 *.log
 .DS_Store
