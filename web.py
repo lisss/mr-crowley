@@ -1,8 +1,14 @@
 import os
-from flask import Flask, send_from_directory
-from routes import crawl, redis, visited_urls
+import sys
+from flask import Flask, send_from_directory, jsonify
 
 app = Flask(__name__, static_folder="static")
+
+try:
+    from routes import crawl, redis, visited_urls
+except ImportError as e:
+    print(f"Warning: Could not import routes: {e}", file=sys.stderr)
+    crawl = redis = visited_urls = None
 
 
 @app.route("/")
@@ -15,44 +21,50 @@ def serve_static(path):
     return send_from_directory("static", path)
 
 
-@app.route("/api/redis-ui-url")
-def get_redis_ui_url():
-    return redis.get_redis_ui_url()
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
-@app.route("/api/crawl", methods=["POST"])
-def start_crawl():
-    return crawl.start_crawl()
+if crawl:
+
+    @app.route("/api/crawl", methods=["POST"])
+    def start_crawl():
+        return crawl.start_crawl()
+
+    @app.route("/api/logs")
+    def get_logs():
+        return crawl.get_logs()
+
+    @app.route("/api/clear-logs", methods=["POST"])
+    def clear_logs():
+        return crawl.clear_logs()
+
+    @app.route("/api/stop-crawl", methods=["POST"])
+    def stop_crawl():
+        return crawl.stop_crawl()
 
 
-@app.route("/api/logs")
-def get_logs():
-    return crawl.get_logs()
+if redis:
+
+    @app.route("/api/redis-ui-url")
+    def get_redis_ui_url():
+        return redis.get_redis_ui_url()
+
+    @app.route("/redis-ui")
+    def redis_ui():
+        return redis.redis_ui()
+
+    @app.route("/api/redis-health")
+    def redis_health():
+        return redis.redis_health()
 
 
-@app.route("/api/clear-logs", methods=["POST"])
-def clear_logs():
-    return crawl.clear_logs()
+if visited_urls:
 
-
-@app.route("/api/stop-crawl", methods=["POST"])
-def stop_crawl():
-    return crawl.stop_crawl()
-
-
-@app.route("/redis-ui")
-def redis_ui():
-    return redis.redis_ui()
-
-
-@app.route("/api/redis-health")
-def redis_health():
-    return redis.redis_health()
-
-
-@app.route("/api/visited-urls")
-def get_visited_urls():
-    return visited_urls.get_visited_urls()
+    @app.route("/api/visited-urls")
+    def get_visited_urls():
+        return visited_urls.get_visited_urls()
 
 
 if __name__ == "__main__":

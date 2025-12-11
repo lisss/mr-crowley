@@ -18,10 +18,17 @@ COPY static/css ./static/css
 RUN npm install && npm run build
 
 COPY *.py ./
+COPY routes ./routes
+COPY crawler ./crawler
+COPY frontier ./frontier
+COPY deduplicator ./deduplicator
+COPY extractor ./extractor
+COPY fetcher.py ./
+COPY storage.py ./
 COPY static/index.html ./static/index.html
 
 EXPOSE 5000
 
 ENTRYPOINT []
-CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 2 --timeout 120 web:app"]
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile - web:app"]
 
