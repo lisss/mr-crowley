@@ -4,6 +4,8 @@ import time
 
 def run_crawl(components):
     f = sys.stdout
+    # it should have been made better
+    # e.g. we needed to create instances of the components instead of getting them from the dict
     frontier = components["frontier"]
     deduplicator = components["deduplicator"]
     fetcher = components["fetcher"]
