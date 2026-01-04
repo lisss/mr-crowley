@@ -1,6 +1,8 @@
 from flask import jsonify
 import traceback
 
+from constants import REDIS_KEY_VISITED, REDIS_KEY_LEVEL
+
 
 def get_visited_urls():
     try:
@@ -29,12 +31,12 @@ def get_visited_urls():
                 "level_distribution": {},
             }), 500
 
-        visited = storage.client.smembers("crawley:visited")
+        visited = storage.client.smembers(REDIS_KEY_VISITED)
         visited_list = []
         level_data = {}
 
-        if storage.client.exists("crawley:level"):
-            all_levels = storage.client.hgetall("crawley:level")
+        if storage.client.exists(REDIS_KEY_LEVEL):
+            all_levels = storage.client.hgetall(REDIS_KEY_LEVEL)
             for url, level_str in all_levels.items():
                 try:
                     level = int(level_str) if isinstance(level_str, str) else int(level_str)

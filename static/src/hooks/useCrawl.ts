@@ -4,6 +4,7 @@ import { CrawlStatus } from '../types/CrawlStatus';
 import { startCrawl } from '../utils/api/startCrawl';
 import { stopCrawl } from '../utils/api/stopCrawl';
 import { fetchLogs } from '../utils/api/fetchLogs';
+import { LOGS_POLLING_INTERVAL } from '../constants';
 
 export function useCrawl() {
     const [logs, setLogs] = useState('No logs yet. Start a crawl to see output.');
@@ -39,7 +40,7 @@ export function useCrawl() {
     };
 
     useEffect(() => {
-        const interval = setInterval(updateLogs, 5000);
+        const interval = setInterval(updateLogs, LOGS_POLLING_INTERVAL);
         return () => clearInterval(interval);
     }, [isRunning]);
 

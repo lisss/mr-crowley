@@ -4,6 +4,7 @@ from frontier.robots import load_robots_txt, is_allowed
 from frontier.visited import is_visited, mark_visited, get_visited_count
 from deduplicator.deduplicator import Deduplicator
 from storage import Storage
+from constants import REDIS_KEY_VISITED, REDIS_KEY_QUEUED, REDIS_KEY_QUEUE, REDIS_KEY_LEVEL
 
 
 class Frontier:
@@ -17,10 +18,10 @@ class Frontier:
     ):
         self.storage = storage
         self.max_level = max_level
-        self.visited_key = "crawley:visited"
-        self.queued_key = "crawley:queued"
-        self.queue_key = "crawley:queue"
-        self.level_key = "crawley:level"
+        self.visited_key = REDIS_KEY_VISITED
+        self.queued_key = REDIS_KEY_QUEUED
+        self.queue_key = REDIS_KEY_QUEUE
+        self.level_key = REDIS_KEY_LEVEL
 
         self.deduplicator = deduplicator or Deduplicator(storage)
         normalized_start = self.deduplicator.normalize(start_url)

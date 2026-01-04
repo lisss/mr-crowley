@@ -1,6 +1,8 @@
 import os
 from flask import jsonify, redirect
 
+from constants import REDIS_KEY_VISITED, REDIS_KEY_LEVEL, ENV_REDIS_HOST, ENV_REDIS_PORT
+
 
 def get_redis_ui_url():
     redis_ui_url = os.getenv("REDIS_UI_URL")
@@ -22,9 +24,9 @@ def redis_health():
         storage = Storage()
         storage.client.ping()
 
-        visited_count = storage.client.scard("crawley:visited")
+        visited_count = storage.client.scard(REDIS_KEY_VISITED)
         level_count = (
-            storage.client.hlen("crawley:level") if storage.client.exists("crawley:level") else 0
+            storage.client.hlen(REDIS_KEY_LEVEL) if storage.client.exists(REDIS_KEY_LEVEL) else 0
         )
 
         return jsonify(
@@ -42,8 +44,8 @@ def redis_health():
                 {
                     "status": "error",
                     "error": str(e),
-                    "host": os.getenv("REDIS_HOST", "not set"),
-                    "port": os.getenv("REDIS_PORT", "not set"),
+                    "host": os.getenv(ENV_REDIS_HOST, "not set"),
+                    "port": os.getenv(ENV_REDIS_PORT, "not set"),
                 }
             ),
             500,

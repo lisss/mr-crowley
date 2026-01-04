@@ -3,6 +3,7 @@ import { MetricsData } from '../../types/MetricsData';
 import { QueueData } from '../../types/QueueData';
 import { fetchMetrics } from '../../utils/api/fetchMetrics';
 import { fetchQueue } from '../../utils/api/fetchQueue';
+import { METRICS_POLLING_INTERVAL } from '../../constants';
 
 export function useMetrics() {
     const [metrics, setMetrics] = useState<MetricsData | null>(null);
@@ -28,7 +29,7 @@ export function useMetrics() {
 
     useEffect(() => {
         loadData();
-        const interval = setInterval(loadData, 5000);
+        const interval = setInterval(loadData, METRICS_POLLING_INTERVAL);
         return () => clearInterval(interval);
     }, []);
 

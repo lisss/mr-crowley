@@ -3,15 +3,14 @@ import sys
 from urllib.parse import urlparse
 
 from crawler import Crawley
+from constants import DEFAULT_CRAWL_URL
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="A simple web crawler that crawls pages on a single subdomain."
     )
-    parser.add_argument(
-        "url", nargs="?", help="Starting URL to crawl (e.g., https://crawlme.monzo.com/)"
-    )
+    parser.add_argument("url", nargs="?", help=f"Starting URL to crawl (e.g., {DEFAULT_CRAWL_URL})")
     parser.add_argument(
         "--user-agent",
         default="CrawleyBot/1.0",

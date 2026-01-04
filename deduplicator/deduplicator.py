@@ -1,12 +1,13 @@
 from deduplicator.normalize import normalize_url
 from deduplicator.filter import filter_unique
 from storage import Storage
+from constants import REDIS_KEY_SEEN
 
 
 class Deduplicator:
     def __init__(self, storage=None):
         self.storage = storage
-        self.seen_key = "crawley:seen"
+        self.seen_key = REDIS_KEY_SEEN
         if storage is None:
             self._in_memory_seen = set()
         else:
@@ -36,4 +37,3 @@ class Deduplicator:
         if self.storage:
             return self.storage.get_set_size(self.seen_key)
         return len(self._in_memory_seen)
-

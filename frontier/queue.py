@@ -1,16 +1,17 @@
 from collections import deque
 from deduplicator.deduplicator import Deduplicator
 from storage import Storage
+from constants import REDIS_KEY_QUEUE, REDIS_KEY_QUEUED, REDIS_KEY_LEVEL
 
 
 def init_queue(storage, deduplicator, normalized_start, max_level):
     if storage:
-        queue_length = storage.get_list_length("crawley:queue")
+        queue_length = storage.get_list_length(REDIS_KEY_QUEUE)
         if queue_length == 0:
-            if not storage.is_in_set("crawley:queued", normalized_start):
-                storage.add_to_list("crawley:queue", normalized_start)
-                storage.add_to_set("crawley:queued", normalized_start)
-                storage.client.hset("crawley:level", normalized_start, 0)
+            if not storage.is_in_set(REDIS_KEY_QUEUED, normalized_start):
+                storage.add_to_list(REDIS_KEY_QUEUE, normalized_start)
+                storage.add_to_set(REDIS_KEY_QUEUED, normalized_start)
+                storage.client.hset(REDIS_KEY_LEVEL, normalized_start, 0)
         return None, None, None, None
     else:
         return deque([(normalized_start, 0)]), {normalized_start}, set(), {normalized_start: 0}
@@ -18,16 +19,16 @@ def init_queue(storage, deduplicator, normalized_start, max_level):
 
 def has_next(storage, in_memory_to_visit):
     if storage:
-        return storage.get_list_length("crawley:queue") > 0
+        return storage.get_list_length(REDIS_KEY_QUEUE) > 0
     return len(in_memory_to_visit) > 0
 
 
 def get_next(storage, in_memory_to_visit, in_memory_queued, max_level):
     if storage:
-        url = storage.pop_from_list("crawley:queue")
+        url = storage.pop_from_list(REDIS_KEY_QUEUE)
         if url:
-            storage.remove_from_set("crawley:queued", url)
-            level_str = storage.client.hget("crawley:level", url)
+            storage.remove_from_set(REDIS_KEY_QUEUED, url)
+            level_str = storage.client.hget(REDIS_KEY_LEVEL, url)
             if level_str:
                 level = int(level_str.decode() if isinstance(level_str, bytes) else level_str)
             else:

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CrawlFormData } from '../types/CrawlFormData';
 import { clearLogs } from '../utils/api';
+import { DEFAULT_CRAWL_URL, FORM_DEFAULTS } from '../constants';
 
 interface CrawlFormProps {
     onSubmit: (data: CrawlFormData) => void;
@@ -9,7 +10,7 @@ interface CrawlFormProps {
 }
 
 export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProps) {
-    const [url, setUrl] = useState('https://crawlme.monzo.com/');
+    const [url, setUrl] = useState(DEFAULT_CRAWL_URL);
     const [userAgent, setUserAgent] = useState('');
     const [allowedDomain, setAllowedDomain] = useState('');
     const [level, setLevel] = useState('');
@@ -41,7 +42,7 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
                     id="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://crawlme.monzo.com/"
+                    placeholder={FORM_DEFAULTS.URL_PLACEHOLDER}
                     required
                     disabled={isRunning}
                 />

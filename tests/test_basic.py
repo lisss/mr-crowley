@@ -4,16 +4,17 @@ from unittest.mock import Mock, patch
 from deduplicator import Deduplicator
 from extractor import Extractor
 from frontier import Frontier
+from constants import DEFAULT_CRAWL_URL
 
 
 class TestCoreArchitecture:
     def test_services_integrate_correctly(self):
         deduplicator = Deduplicator()
-        frontier = Frontier("https://crawlme.monzo.com/", deduplicator=deduplicator)
+        frontier = Frontier(DEFAULT_CRAWL_URL, deduplicator=deduplicator)
         extractor = Extractor("crawlme.monzo.com", deduplicator)
 
         html = '<html><body><a href="/page1">Link 1</a><a href="/page2">Link 2</a></body></html>'
-        links = extractor.extract(html, "https://crawlme.monzo.com/")
+        links = extractor.extract(html, DEFAULT_CRAWL_URL)
         assert len(links) == 2
 
         added = frontier.add_urls(links)
@@ -29,11 +30,11 @@ class TestCoreArchitecture:
             mock_response = Mock()
             mock_response.text = "<html>Test</html>"
             mock_response.status_code = 200
-            mock_response.url = "https://crawlme.monzo.com/"
+            mock_response.url = DEFAULT_CRAWL_URL
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
 
-            success, html, status, url = fetcher.fetch("https://crawlme.monzo.com/")
+            success, html, status, url = fetcher.fetch(DEFAULT_CRAWL_URL)
             assert success is True
             assert html == "<html>Test</html>"
             assert status == 200
@@ -43,7 +44,7 @@ class TestCoreArchitecture:
         with patch("requests.Session.get") as mock_get:
             mock_get.side_effect = requests.exceptions.RequestException("Connection error")
 
-            success, html, status, url = fetcher.fetch("https://crawlme.monzo.com/")
+            success, html, status, url = fetcher.fetch(DEFAULT_CRAWL_URL)
             assert success is False
             assert html is None
             assert status is None
@@ -52,9 +53,9 @@ class TestCoreArchitecture:
         deduplicator = Deduplicator()
         extractor = Extractor("crawlme.monzo.com", deduplicator)
 
-        html = '<html><body><a href="https://crawlme.monzo.com/page1">Same</a><a href="https://other.com/page">Other</a></body></html>'
-        links = extractor.extract(html, "https://crawlme.monzo.com/")
+        html = f'<html><body><a href="{DEFAULT_CRAWL_URL}page1">Same</a><a href="https://other.com/page">Other</a></body></html>'
+        links = extractor.extract(html, DEFAULT_CRAWL_URL)
 
         assert len(links) == 1
-        assert "https://crawlme.monzo.com/page1" in links
+        assert f"{DEFAULT_CRAWL_URL}page1" in links
         assert "https://other.com/page" not in links

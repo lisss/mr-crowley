@@ -4,6 +4,8 @@ import threading
 from datetime import datetime
 from flask import request, jsonify
 
+from constants import ENV_REDIS_HOST, DEFAULT_REDIS_HOST
+
 crawl_logs = []
 crawl_lock = threading.Lock()
 crawl_running = False
@@ -43,8 +45,8 @@ def start_crawl():
             use_storage = data.get("use_storage", False)
             if (
                 not use_storage
-                and os.getenv("REDIS_HOST")
-                and os.getenv("REDIS_HOST") != "localhost"
+                and os.getenv(ENV_REDIS_HOST)
+                and os.getenv(ENV_REDIS_HOST) != DEFAULT_REDIS_HOST
             ):
                 use_storage = True
             if use_storage:

@@ -2,6 +2,8 @@ import os
 import sys
 from flask import Flask, send_from_directory, jsonify
 
+from constants import DEFAULT_WEB_PORT, ENV_PORT, WEB_SERVER_HOST, DEBUG_MODE
+
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
 try:
@@ -72,6 +74,6 @@ if visited_urls:
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
+    port = int(os.getenv(ENV_PORT, DEFAULT_WEB_PORT))
     debug = os.getenv("FLASK_DEBUG", "0") == "1"
-    app.run(host="0.0.0.0", port=port, debug=debug, use_reloader=debug)
+    app.run(host=WEB_SERVER_HOST, port=port, debug=debug, use_reloader=debug)

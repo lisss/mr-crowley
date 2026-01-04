@@ -7,6 +7,13 @@ from extractor.extractor import Extractor
 from fetcher import Fetcher
 from frontier.frontier import Frontier
 from storage import Storage
+from constants import (
+    REDIS_KEY_VISITED,
+    REDIS_KEY_QUEUED,
+    REDIS_KEY_QUEUE,
+    REDIS_KEY_LEVEL,
+    REDIS_KEY_SEEN,
+)
 
 
 def init_crawler(start_url, user_agent, allowed_domain, use_storage, max_level, clear_storage):
@@ -21,11 +28,11 @@ def init_crawler(start_url, user_agent, allowed_domain, use_storage, max_level, 
             storage.client.ping()
             if clear_storage:
                 keys = [
-                    "crawley:visited",
-                    "crawley:queued",
-                    "crawley:queue",
-                    "crawley:level",
-                    "crawley:seen",
+                    REDIS_KEY_VISITED,
+                    REDIS_KEY_QUEUED,
+                    REDIS_KEY_QUEUE,
+                    REDIS_KEY_LEVEL,
+                    REDIS_KEY_SEEN,
                 ]
                 for key in keys:
                     storage.client.delete(key)
@@ -33,8 +40,8 @@ def init_crawler(start_url, user_agent, allowed_domain, use_storage, max_level, 
             else:
                 # Check if we need to explore deeper
                 prev_max_level = 0
-                if storage.client.exists("crawley:level"):
-                    all_levels = storage.client.hgetall("crawley:level")
+                if storage.client.exists(REDIS_KEY_LEVEL):
+                    all_levels = storage.client.hgetall(REDIS_KEY_LEVEL)
                     if all_levels:
                         prev_max_level = max(int(level) for level in all_levels.values())
 
@@ -53,13 +60,13 @@ def init_crawler(start_url, user_agent, allowed_domain, use_storage, max_level, 
                         ]
                         if boundary_urls:
                             # Clear queue and add boundary URLs for deeper exploration
-                            storage.client.delete("crawley:queued")
-                            storage.client.delete("crawley:queue")
+                            storage.client.delete(REDIS_KEY_QUEUED)
+                            storage.client.delete(REDIS_KEY_QUEUE)
 
                             # Add boundary URLs back to queue (but keep them in visited)
                             for url in boundary_urls:
-                                storage.add_to_list("crawley:queue", url)
-                                storage.add_to_set("crawley:queued", url)
+                                storage.add_to_list(REDIS_KEY_QUEUE, url)
+                                storage.add_to_set(REDIS_KEY_QUEUED, url)
 
                             print(
                                 f"Re-queued {len(boundary_urls)} boundary URLs for deeper exploration.",
@@ -67,10 +74,10 @@ def init_crawler(start_url, user_agent, allowed_domain, use_storage, max_level, 
                             )
 
                 # Always ensure start URL is in queue if queue is empty
-                if storage.get_list_length("crawley:queue") == 0:
-                    if not storage.is_in_set("crawley:queued", normalized_start):
-                        storage.add_to_list("crawley:queue", normalized_start)
-                        storage.add_to_set("crawley:queued", normalized_start)
+                if storage.get_list_length(REDIS_KEY_QUEUE) == 0:
+                    if not storage.is_in_set(REDIS_KEY_QUEUED, normalized_start):
+                        storage.add_to_list(REDIS_KEY_QUEUE, normalized_start)
+                        storage.add_to_set(REDIS_KEY_QUEUED, normalized_start)
         except Exception as e:
             print(
                 f"Warning: Could not connect to Redis: {e}. Using in-memory storage.",

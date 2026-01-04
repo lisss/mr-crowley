@@ -2,11 +2,22 @@ import os
 import redis
 from typing import Set
 
+from constants import (
+    DEFAULT_REDIS_PORT,
+    DEFAULT_REDIS_HOST,
+    ENV_REDIS_HOST,
+    ENV_REDIS_PORT,
+    ENV_REDIS_PASSWORD,
+    REDIS_KEY_VISITED,
+    REDIS_KEY_QUEUED,
+    CACHE_SIZE_LIMIT,
+)
+
 
 class Storage:
     def __init__(self, redis_host=None, redis_port=None, redis_db=0, redis_password=None):
         redis_url_env = os.getenv("REDIS_URL")
-        redis_host_env = (os.getenv("REDIS_HOST", "localhost") or "").strip()
+        redis_host_env = (os.getenv(ENV_REDIS_HOST, DEFAULT_REDIS_HOST) or "").strip()
         allow_in_memory = bool(
             os.getenv("ALLOW_IN_MEMORY_REDIS")
             or os.getenv("PYTEST_CURRENT_TEST")
@@ -77,7 +88,7 @@ class Storage:
             self.redis_password = None
             self._visited_cache = set()
             self._queued_cache = set()
-            self._cache_size_limit = 10000
+            self._cache_size_limit = CACHE_SIZE_LIMIT
             return
 
         if not redis_url_env and (redis_host_env in ("", "your-redis-host")):
@@ -111,12 +122,12 @@ class Storage:
                 redis_url_env, decode_responses=False
             ).connection_pool.connection_kwargs
             self.redis_host = parsed.get("host", "unknown")
-            self.redis_port = parsed.get("port", 6379)
+            self.redis_port = parsed.get("port", DEFAULT_REDIS_PORT)
         else:
-            self.redis_host = redis_host or os.getenv("REDIS_HOST", "localhost")
-            self.redis_port = redis_port or int(os.getenv("REDIS_PORT", "6379"))
+            self.redis_host = redis_host or os.getenv(ENV_REDIS_HOST, DEFAULT_REDIS_HOST)
+            self.redis_port = redis_port or int(os.getenv(ENV_REDIS_PORT, str(DEFAULT_REDIS_PORT)))
             self.redis_db = redis_db
-            redis_password_env = redis_password or os.getenv("REDIS_PASSWORD")
+            redis_password_env = redis_password or os.getenv(ENV_REDIS_PASSWORD)
             self.redis_password = redis_password_env if redis_password_env else None
 
             use_ssl = os.getenv("REDIS_SSL", "false").lower() in ("true", "1", "yes")
@@ -149,30 +160,30 @@ class Storage:
             self.client = redis.Redis(**connection_kwargs)
         self._visited_cache = set()
         self._queued_cache = set()
-        self._cache_size_limit = 10000
+        self._cache_size_limit = CACHE_SIZE_LIMIT
 
     def add_to_set(self, key: str, value: str) -> bool:
         result = self.client.sadd(key, value) > 0
-        if key == "crawley:visited" and len(self._visited_cache) < self._cache_size_limit:
+        if key == REDIS_KEY_VISITED and len(self._visited_cache) < self._cache_size_limit:
             self._visited_cache.add(value)
-        elif key == "crawley:queued" and len(self._queued_cache) < self._cache_size_limit:
+        elif key == REDIS_KEY_QUEUED and len(self._queued_cache) < self._cache_size_limit:
             self._queued_cache.add(value)
         return result
 
     def is_in_set(self, key: str, value: str) -> bool:
-        if key == "crawley:visited" and value in self._visited_cache:
+        if key == REDIS_KEY_VISITED and value in self._visited_cache:
             return True
-        if key == "crawley:queued" and value in self._queued_cache:
+        if key == REDIS_KEY_QUEUED and value in self._queued_cache:
             return True
         result = self.client.sismember(key, value)
         if (
             result
-            and key == "crawley:visited"
+            and key == REDIS_KEY_VISITED
             and len(self._visited_cache) < self._cache_size_limit
         ):
             self._visited_cache.add(value)
         elif (
-            result and key == "crawley:queued" and len(self._queued_cache) < self._cache_size_limit
+            result and key == REDIS_KEY_QUEUED and len(self._queued_cache) < self._cache_size_limit
         ):
             self._queued_cache.add(value)
         return result
@@ -195,7 +206,7 @@ class Storage:
 
     def remove_from_set(self, key: str, value: str):
         self.client.srem(key, value)
-        if key == "crawley:queued":
+        if key == REDIS_KEY_QUEUED:
             self._queued_cache.discard(value)
 
     def get_all_from_set(self, key: str) -> Set[str]:
