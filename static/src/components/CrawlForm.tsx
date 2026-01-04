@@ -13,8 +13,8 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
     const [userAgent, setUserAgent] = useState('');
     const [allowedDomain, setAllowedDomain] = useState('');
     const [level, setLevel] = useState('');
-    const [useStorage, setUseStorage] = useState(false);
-    const [clearStorage, setClearStorage] = useState(true);
+    const [useStorage, setUseStorage] = useState(true);
+    const [clearStorage, setClearStorage] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,7 +27,7 @@ export default function CrawlForm({ onSubmit, isRunning, onStop }: CrawlFormProp
         if (!isNaN(levelNum)) data.level = levelNum;
         if (useStorage) {
             data.use_storage = true;
-            if (clearStorage) data.clear_storage = true;
+            data.clear_storage = clearStorage;
         }
         onSubmit(data);
     };

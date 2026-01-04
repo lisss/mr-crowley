@@ -49,7 +49,7 @@ def start_crawl():
                 use_storage = True
             if use_storage:
                 cmd.append("--use-storage")
-                if data.get("clear_storage", True):
+                if data.get("clear_storage", False):
                     cmd.append("--clear-storage")
 
             with crawl_lock:

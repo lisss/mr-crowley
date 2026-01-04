@@ -1,0 +1,193 @@
+CLI USAGE:
+
+python crawler.py <url> [options]
+
+Arguments:
+  url                    Starting URL to crawl (required)
+  --user-agent           User agent (default: CrawleyBot/1.0)
+  --allowed-domain       Domain to allow crawling (default: same as URL domain)
+  --level                Maximum crawl depth (0=start URL only, 1=+direct links, etc.)
+  --use-storage          Enable Redis persistent storage (default: in-memory)
+  --clear-storage        Clear Redis storage before crawl (requires --use-storage)
+
+Example:
+python crawler.py https://crawlme.monzo.com/ --level 2 --use-storage --clear-storage
+
+### Design approach
+
+- UX: i started with cli (simple script) but ended up with web ui as it's more user-friendly (one doesn't need to run stuff in the inconvenient console, clicking buttons in web is always preferable for most people)
+- intorduced max depth level for crawling - just for the sake of simplifying its testing (say, you just want to check that things work, you don't need to crawl the entire internet)
+- using redis
+  - once you crawl or repeat the crawling, you eventually end up with duplicating stuff you already seen
+  - keeping that it the cache is a good idea for a fast access
+  - also, we need peristence anyways, redis was a choice that combined both good caching solution and persistence storage
+  - another option considered was to use some SQL DB (e.g. MySQL or Postgres), but for this task, I believe, redis is fine
+  - it also adds an ability (via its IU) to check the raw data in the DB in case you're unsure
+- CI/CD: i tried to apply some solution to automatically test & deploy the app, but for some reason nothing worked, so that I decided to postpone it for now
+
+
+
+=================
+
+BACKEND:
+- crawler app itself
+- redis as a storage (with its separate web ui interface to check its contents)
+
+FRONTEND:
+- entry-point UI to tune crawler and run/stop the process
+- ability to check the results and see the persistent data in redis
+- 
+
+crawler.py
+  main() - CLI entry point, parses arguments and creates Crawley instance
+
+routes/crawl.py
+  start_crawl() - spawns crawler subprocess with parameters
+  get_logs() - returns crawl logs and status
+  clear_logs() - clears stored logs
+  stop_crawl() - terminates crawler subprocess
+  run_crawl() - internal function that runs subprocess and captures output
+
+routes/redis.py
+  get_redis_ui_url() - returns Redis UI URL from environment
+  redis_ui() - redirects to Redis UI
+  redis_health() - checks Redis connection and returns metrics
+
+routes/visited_urls.py
+  get_visited_urls() - fetches visited URLs from Redis with level data and patterns
+
+crawler/crawley.py
+  Crawley.__init__() - initializes crawler with components
+  Crawley.crawl() - starts crawl process
+
+crawler/init.py
+  init_crawler() - creates and configures all crawler components (Storage, Deduplicator, Fetcher, Frontier, Extractor)
+
+crawler/crawl.py
+  run_crawl() - main crawl loop: gets URLs from frontier, fetches pages, extracts links, adds to queue
+
+fetcher.py
+  Fetcher.__init__() - sets up HTTP session with user agent
+  Fetcher.fetch() - makes HTTP request, handles redirects and errors
+
+storage.py
+  Storage.__init__() - configures Redis or in-memory storage based on environment
+  Storage.add_to_set() - adds item to set with local caching
+  Storage.is_in_set() - checks if item exists in set with caching
+  Storage.get_set_size() - returns set size
+  Storage.add_to_list() - adds item to list queue
+  Storage.add_to_list_batch() - adds multiple items to list
+  Storage.pop_from_list() - removes and returns first item from list
+  Storage.get_list_length() - returns list length
+  Storage.remove_from_set() - removes item from set
+  Storage.get_all_from_set() - returns all items from set
+  Storage.pipeline() - returns Redis pipeline for batch operations
+  InMemoryRedis (inner class) - mimics Redis operations for testing
+
+frontier/frontier.py
+  Frontier.__init__() - initializes queue, visited tracking, robots.txt parser
+  Frontier.has_next() - checks if queue has URLs
+  Frontier.get_next() - returns next URL and level from queue
+  Frontier.is_visited() - checks if URL already visited
+  Frontier.mark_visited() - marks URL as visited
+  Frontier.is_allowed() - checks robots.txt compliance
+  Frontier.add_urls() - adds new URLs to queue with level tracking
+  Frontier.get_visited_count() - returns number of visited URLs
+
+frontier/queue.py
+  init_queue() - initializes queue with starting URL
+  has_next() - checks if queue has items
+  get_next() - gets next URL and level from queue
+  add_urls() - adds URLs to queue with deduplication and level management (complex function handling Redis batching and in-memory fallback)
+
+frontier/robots.py
+  load_robots_txt() - fetches and parses robots.txt
+  is_allowed() - checks if URL allowed by robots.txt
+
+frontier/visited.py
+  is_visited() - checks if URL already visited
+  mark_visited() - marks URL as visited and updates deduplicator
+  get_visited_count() - returns count of visited URLs
+
+extractor/extractor.py
+  Extractor.__init__() - initializes with domain filter and deduplicator
+  Extractor._is_allowed_domain() - checks domain compliance
+  Extractor.extract() - extracts links from HTML
+
+extractor/extract.py
+  extract_links() - parses HTML with BeautifulSoup, extracts and normalizes <a> href links
+
+extractor/domain.py
+  is_allowed_domain() - checks if URL matches allowed domain
+
+deduplicator/deduplicator.py
+  Deduplicator.__init__() - initializes storage for seen URLs
+  Deduplicator.normalize() - normalizes URL format
+  Deduplicator.is_seen() - checks if URL already processed
+  Deduplicator.mark_seen() - marks URL as seen
+  Deduplicator.filter_unique() - filters list to unique URLs
+  Deduplicator.get_seen_count() - returns count of seen URLs
+
+deduplicator/normalize.py
+  normalize_url() - standardizes URL format (removes fragments, trailing slashes)
+
+deduplicator/filter.py
+  filter_unique() - complex function that filters URLs to unique ones, handling both Redis and in-memory storage with pipeline optimization
+
+FRONTEND MODULES:
+
+static/src/main.tsx
+  root.render() - React application entry point
+
+static/src/components/App.tsx
+  App() - main component, manages state and renders UI sections
+  handleRedisClick() - handles Redis UI link clicks
+
+static/src/components/CrawlForm.tsx
+  CrawlForm() - form component for crawl configuration
+  handleSubmit() - processes form data and starts crawl
+
+static/src/hooks/useCrawl.ts
+  useCrawl() - custom hook managing crawl state and API calls
+  updateLogs() - fetches logs from API and updates status
+  handleStart() - starts crawl and sets up polling
+  handleStop() - stops crawl and cleans up
+
+static/src/components/VisitedUrls/VisitedUrls.tsx
+  VisitedUrls() - displays visited URLs with patterns and metrics
+
+static/src/utils/api/
+  startCrawl() - calls /api/crawl endpoint
+  stopCrawl() - calls /api/stop-crawl endpoint
+  fetchLogs() - calls /api/logs endpoint
+  fetchVisitedUrls() - calls /api/visited-urls endpoint
+  clearLogs() - calls /api/clear-logs endpoint
+  getRedisUiUrl() - calls /api/redis-ui-url endpoint
+
+KEY CONNECTIONS:
+
+1. Frontend → Backend API:
+   - CrawlForm → routes/crawl.py (via utils/api)
+   - useCrawl hook → routes/crawl.py for logs/status
+   - VisitedUrls → routes/visited_urls.py
+
+2. API → Crawler Engine:
+   - routes/crawl.py → spawns crawler.py subprocess
+   - crawler.py → crawler/crawley.py → crawler/init.py
+
+3. Crawler Components Flow:
+   - crawler/crawl.py orchestrates: Frontier → Fetcher → Extractor → Deduplicator
+   - All components use Storage for persistence
+
+4. Storage Layer:
+   - All components → storage.py (Redis or in-memory)
+   - storage.py → Redis or InMemoryRedis class
+
+5. Data Flow in Crawl Loop:
+   - Frontier.get_next() → Fetcher.fetch() → Extractor.extract() → Deduplicator.filter_unique() → Frontier.add_urls()
+
+6. Cross-module Dependencies:
+   - Frontier uses Deduplicator for URL normalization
+   - Extractor uses Deduplicator to avoid duplicate processing
+   - All components share Storage instance for state persistence
+   - Routes access Storage directly for API responses

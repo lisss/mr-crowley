@@ -4,12 +4,12 @@ import time
 
 def run_crawl(components):
     f = sys.stdout
-    frontier = components['frontier']
-    deduplicator = components['deduplicator']
-    fetcher = components['fetcher']
-    extractor = components['extractor']
-    start_url = components['start_url']
-    max_level = components['max_level']
+    frontier = components["frontier"]
+    deduplicator = components["deduplicator"]
+    fetcher = components["fetcher"]
+    extractor = components["extractor"]
+    start_url = components["start_url"]
+    max_level = components["max_level"]
 
     start_time = time.time()
     f.write(f"Starting crawl from: {start_url}\n")
@@ -27,7 +27,14 @@ def run_crawl(components):
         if max_level is not None and level > max_level:
             continue
 
+        # Check if already visited - if so, only extract links for deeper exploration
         if frontier.is_visited(url):
+            f.write(f"Re-examining for deeper links (level {level}): {url}\n")
+            # Fetch page to extract links for deeper levels
+            success, html, status_code, final_url = fetcher.fetch(url)
+            if success:
+                links = extractor.extract(html, url)
+                frontier.add_urls(links, level)
             continue
 
         normalized_url = deduplicator.normalize(url)
@@ -63,4 +70,3 @@ def run_crawl(components):
     f.write(
         f"\nCrawl complete. Visited {frontier.get_visited_count()} pages in {elapsed_time:.2f} seconds.\n"
     )
-
