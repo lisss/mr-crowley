@@ -8,20 +8,19 @@ Meet Mr. Crowley - a web crawler :)
 
 ### Front-end
 #### CLI
-You can use CLI if you wish, it's as simple as this: `python crawler.py <url> [options]` TODO: link
+You can use CLI if you wish, it's as simple as this: `python crawler.py <url> [options]`
 
 #### Web UI
 A convenient UI to run/stop the crawler. Baked with React and TypeScript. Shows real-time progress, logs. You can see how many pages it found and browse the results (both at the curren UI page or navigating to the Redis web UI console)
 
 ### Backend
 Python & Flask. Divided into modules:
-- **Crawler**: The heart of the system, broken into modular components:
-  - **Frontier**: The traffic controller - manages what to crawl next and makes sure we stay on the right domain
-  - **Fetcher**: Actually downloads the web pages (and deals with all the ways that can go wrong)
-  - **Extractor**: Pulls links out of HTML and filters them  
-  - **Deduplicator**: Makes sure we don't crawl the same page twice
-- **Storage**: Redis persistence with in-memory fallback - saves stuff either to Redis or just in memory, depending on what you want
-
+- **Crawler**: broken into components:
+  - **Frontier**: manages what to crawl next and makes sure we stay on the right domain
+  - **Fetcher**: downloads the web pages (and deals with all the ways that can go wrong)
+  - **Extractor**: pulls links out of HTML and filters them  
+  - **Deduplicator**: makes sure we don't crawl the same page twice
+- **Storage**: persistence on the disk or in-memory (depends on the option you chose)
 
 
 🐧 The diagram can bee seen here:
@@ -29,7 +28,7 @@ Python & Flask. Divided into modules:
 
 
 ### Deployment
-Docker compose with three containers - main app, Redis database, and Redis admin UI
+Docker compose with three containers: main app, Redis database, and Redis admin UI
 
 #### Testing
 pytest on the backend (no FE tests so far...):
@@ -37,18 +36,15 @@ pytest on the backend (no FE tests so far...):
 pytest tests/ -v
 ```
 
-### Design approach TODO - add icon and refine
-- Stays on one domain like a good little bot (but you can change which domain)
-- Respects robots.txt because I'm not a monster
-- Won't crawl the same page twice (even if the URLs look slightly different)
-- Handles errors gracefully instead of just exploding
-- UX: i started with cli (simple script) but ended up with web ui as it's more user-friendly (one doesn't need to run stuff in the inconvenient console, clicking buttons in web is always preferable for most people)
-- intorduced max depth level for crawling - just for the sake of simplifying its testing (say, you just want to check that things work, you don't need to crawl the entire internet)
-- using redis
+### 🚧 Design approach
+- i started with cli (simple script) but ended up with web ui as it's more user-friendly (one doesn't need to run stuff in the inconvenient console, clicking buttons in web is always preferable for most people)
+- the idea is to stay on one domain and don't crawl the same page twice
+- i also imit the crawled pages with the depth (e.g. when you wanna test the functionality, you want to crawl only a few urls, not the entire domain)
+- using redis as in-memory cache and persistent storage if needed:
   - once you crawl or repeat the crawling, you eventually end up with duplicating stuff you already seen
   - keeping that it the cache is a good idea for a fast access
   - also, we need peristence anyways, redis was a choice that combined both good caching solution and persistence storage
-  - another option considered was to use some SQL DB (e.g. MySQL or Postgres), but for this task, I believe, redis is fine
+  - another option considered was to use some SQL DB (e.g. MySQL or Postgres), but for this task, i believe, redis is fine
   - it also adds an ability (via its IU) to check the raw data in the DB in case you're unsure
 - CI/CD: i tried to apply some solution to automatically test & deploy the app, but for some reason nothing worked, so that I decided to postpone it for now
 
