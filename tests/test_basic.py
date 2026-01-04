@@ -6,7 +6,7 @@ from extractor import Extractor
 from frontier import Frontier
 
 
-class TestArchitecture:
+class TestCoreArchitecture:
     def test_services_integrate_correctly(self):
         deduplicator = Deduplicator()
         frontier = Frontier("https://crawlme.monzo.com/", deduplicator=deduplicator)
@@ -20,7 +20,7 @@ class TestArchitecture:
         assert len(added) == 2
         assert frontier.has_next()
 
-    def test_fetcher_handles_successful_request(self):
+    def test_fetcher_basic_functionality(self):
         from fetcher import Fetcher
 
         fetcher = Fetcher()
@@ -38,11 +38,7 @@ class TestArchitecture:
             assert html == "<html>Test</html>"
             assert status == 200
 
-    def test_fetcher_handles_failed_request(self):
-        from fetcher import Fetcher
         import requests
-
-        fetcher = Fetcher()
 
         with patch("requests.Session.get") as mock_get:
             mock_get.side_effect = requests.exceptions.RequestException("Connection error")
@@ -52,7 +48,7 @@ class TestArchitecture:
             assert html is None
             assert status is None
 
-    def test_extractor_filters_by_domain(self):
+    def test_domain_filtering_works(self):
         deduplicator = Deduplicator()
         extractor = Extractor("crawlme.monzo.com", deduplicator)
 
