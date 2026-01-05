@@ -65,6 +65,14 @@ if redis:
     def redis_health():
         return redis.redis_health()
 
+    @app.route("/api/metrics")
+    def get_metrics():
+        return redis.get_metrics()
+
+    @app.route("/api/queue")
+    def get_queue():
+        return redis.get_queue()
+
 
 if visited_urls:
 

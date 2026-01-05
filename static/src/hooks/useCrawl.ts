@@ -15,7 +15,9 @@ export function useCrawl() {
     const updateLogs = async () => {
         try {
             const data = await fetchLogs();
-            setLogs(data.logs || 'No logs yet.');
+            if (data.logs) {
+                setLogs(data.logs);
+            }
             
             if (data.status === 'idle' && isRunning) {
                 setIsRunning(false);

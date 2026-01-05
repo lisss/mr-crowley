@@ -1,7 +1,15 @@
 import os
 from flask import jsonify, redirect
 
-from constants import REDIS_KEY_VISITED, REDIS_KEY_LEVEL, ENV_REDIS_HOST, ENV_REDIS_PORT
+from constants import (
+    REDIS_KEY_VISITED, 
+    REDIS_KEY_LEVEL, 
+    REDIS_KEY_SEEN, 
+    REDIS_KEY_QUEUED, 
+    REDIS_KEY_QUEUE,
+    ENV_REDIS_HOST, 
+    ENV_REDIS_PORT
+)
 
 
 def get_redis_ui_url():
@@ -50,4 +58,64 @@ def redis_health():
             ),
             500,
         )
+
+
+def get_metrics():
+    try:
+        from storage import Storage
+        
+        storage = Storage()
+        storage.client.ping()
+        
+        visited_count = storage.client.scard(REDIS_KEY_VISITED)
+        seen_count = storage.client.scard(REDIS_KEY_SEEN)
+        queued_count = storage.client.scard(REDIS_KEY_QUEUED)
+        queue_length = storage.client.llen(REDIS_KEY_QUEUE)
+        
+        # Generate a simple crawl_id based on visited count
+        crawl_id = visited_count if visited_count > 0 else 1
+        
+        return jsonify({
+            "crawl_id": crawl_id,
+            "visited": visited_count,
+            "seen": seen_count,
+            "queued": queued_count,
+            "queue_length": queue_length,
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "crawl_id": 0,
+            "visited": 0,
+            "seen": 0,
+            "queued": 0,
+            "queue_length": 0,
+        }), 500
+
+
+def get_queue():
+    try:
+        from storage import Storage
+        
+        storage = Storage()
+        storage.client.ping()
+        
+        # Get all queue items (limited to first 100 for performance)
+        queue_items = []
+        queue_length = storage.client.llen(REDIS_KEY_QUEUE)
+        
+        if queue_length > 0:
+            # Get first 100 items from queue
+            queue_items = storage.client.lrange(REDIS_KEY_QUEUE, 0, 99)
+        
+        return jsonify({
+            "queue": queue_items,
+            "length": queue_length,
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "queue": [],
+            "length": 0,
+        }), 500
 
